@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>GitHub API Test</title>
+</head>
+<body>
+	<button onclick="checkGitHub()">Check GitHub</button>
+	<p id="message"></p>
+
+    <code id="json-code">
+        {
+            "contained-default": {
+              "value": "#FAA317",
+              "type": "color"
+            },
+            "contained-text": {
+              "value": "#161038",
+              "type": "color"
+            }
+        }
+    </code>
+    <button onclick="syncWithGitHub()">sync with GitHub</button>
+
+	<script>
+		const apiUrl = 'https://api.github.com';
+		const accessToken = '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';
+		const username = 'bewarai';
+		const repoName = 'test';
+		const branchName = 'main'; // or whatever branch you want to use
+		const filePath = 'test.json';
+
+		function checkGitHub() {
+			const url = `${apiUrl}/repos/${username}/${repoName}/contents/${filePath}?ref=${branchName}`;
+
+			const headers = new Headers();
+			headers.append('Authorization', `Bearer ${accessToken}`);
+
+			const request = new Request(url, {
+				method: 'GET',
+				headers: headers,
+			});
+
+			fetch(request)
+			.then(response => {
+				if (response.ok) {
+					document.getElementById('message').textContent = 'OK';
+				} else {
+					document.getElementById('message').textContent = 'Wrong';
+				}
+			})
+			.catch(error => console.error(error));
+		}
+
+		function syncWithGitHub() {
+  const url = `${apiUrl}/repos/${username}/${repoName}/contents/${filePath}`;
+
+  const headers = new Headers();
+  headers.append('Authorization', `Bearer ${accessToken}`);
+
+  const fileContent = document.getElementById('json-code').textContent;
+  const content = btoa(fileContent);
+
+  const data = {
+    message: 'Updating test.json with new data',
+    content: content,
+    sha: ''
+  };
+
+  // Get the current SHA value for the file
+  fetch(`${url}?ref=${branchName}`, {headers})
+    .then(response => response.json())
+    .then(data => {
+      // Update the SHA value in the request data
+      data.sha = data.content.sha;
+      // Send the PUT request with updated data
+      const request = new Request(url, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(data)
+      });
+      fetch(request)
+        .then(response => {
+          if (response.ok) {
+            document.getElementById('message').textContent = 'Data synced with GitHub';
+          } else {
+            response.json().then(error => console.error(error));
+            document.getElementById('message').textContent = 'Failed to sync data with GitHub';
+          }
+        })
+        .catch(error => console.error(error));
+    })
+    .catch(error => console.error(error));
+}
+
+
+
+	</script>
+</body>
+</html>
